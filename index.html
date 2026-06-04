@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PUM | Gain-Based Prefix Evaluation</title>
   <meta name="description" content="PUM evaluates reasoning prefixes by measuring their solve-rate gain, not only local correctness." />
-  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="site-header">
@@ -153,68 +153,44 @@
 
     <section id="demo" class="section demo-section">
       <div class="section-heading">
-        <p class="eyebrow">Interactive example · real case</p>
-        <h2>Which prefix actually helps the solver?</h2>
+        <p class="eyebrow">Interactive example</p>
+        <h2>A real math case: which prefix is more useful?</h2>
         <p>
-          A concrete math example showing why PUM prefers prefixes that increase downstream solvability,
-          rather than prefixes that merely look fluent or locally plausible.
+          This example illustrates why evaluating the future effect of a prefix can be different from simply checking surface plausibility.
         </p>
       </div>
 
-      <div class="demo-card demo-real-case" data-version="v4-real-demo">
+      <div class="demo-card">
         <div class="problem-box">
           <span class="box-label">Problem</span>
-          <p class="math-problem">
-            Let <em>x</em> and <em>y</em> be real numbers satisfying
-            <strong>x + y = 10</strong> and <strong>xy = 21</strong>.
-            Find <strong>x² + y²</strong>.
+          <p>
+            Let <em>x</em> and <em>y</em> be real numbers such that <em>x + y = 10</em> and <em>xy = 21</em>.
+            Find <em>x² + y²</em>.
           </p>
         </div>
-
         <div class="prefix-grid">
           <button class="prefix-card active" data-prefix="a" type="button">
-            <span class="box-label">Prefix A · useful</span>
-            <strong>Use an identity that directly connects the givens to the target.</strong>
+            <span class="box-label">Prefix A</span>
+            <strong>Use the key identity.</strong>
             <p>
-              We need x² + y². Since (x + y)² = x² + 2xy + y²,
-              we can rewrite the target as x² + y² = (x + y)² − 2xy.
+              Since (x + y)² = x² + 2xy + y², we can compute x² + y² from the two given quantities.
             </p>
           </button>
-
           <button class="prefix-card" data-prefix="b" type="button">
-            <span class="box-label">Prefix B · misleading</span>
-            <strong>Make a fluent but invalid shortcut.</strong>
+            <span class="box-label">Prefix B</span>
+            <strong>Make a tempting but wrong guess.</strong>
             <p>
-              Since x + y = 10, take x = 6 and y = 4. Then x² + y² = 36 + 16 = 52.
+              Since x + y = 10, try x = 6 and y = 4. Then x² + y² = 36 + 16 = 52.
             </p>
           </button>
         </div>
-
-        <div class="rollout-comparison" aria-label="Illustrative continuation outcomes">
-          <div>
-            <span class="box-label">Without prefix</span>
-            <strong>3 / 8 correct continuations</strong>
-            <p>The solver must discover the right identity from scratch.</p>
-          </div>
-          <div>
-            <span class="box-label">With Prefix A</span>
-            <strong>7 / 8 correct continuations</strong>
-            <p>The continuation is almost forced: 100 − 42 = 58.</p>
-          </div>
-          <div>
-            <span class="box-label">With Prefix B</span>
-            <strong>0 / 8 correct continuations</strong>
-            <p>The prefix violates xy = 21 because 6 × 4 = 24.</p>
-          </div>
-        </div>
-
         <div class="demo-output" id="demo-output" aria-live="polite">
           <span class="box-label">PUM-style utility judgment</span>
           <h3>Prefer Prefix A</h3>
           <p>
-            Prefix A gives a reusable path to the answer:
-            x² + y² = (x + y)² − 2xy = 10² − 2 × 21 = 58.
-            Prefix B sounds natural but contradicts the condition xy = 21, so it lowers the chance of a correct continuation.
+            Prefix A reduces the remaining task to a direct calculation:
+            x² + y² = (x + y)² - 2xy = 100 - 42 = 58.
+            Prefix B looks simple but violates xy = 21 because 6 × 4 = 24, so it pushes the continuation toward a wrong answer.
           </p>
         </div>
       </div>
@@ -252,6 +228,6 @@
     <a href="#top">Back to top ↑</a>
   </footer>
 
-  <script src="script.js?v=4"></script>
+  <script src="script.js"></script>
 </body>
 </html>

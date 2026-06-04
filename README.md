@@ -18,8 +18,3 @@ Upload these files to the root of the GitHub repository and enable:
 - Source: Deploy from a branch
 - Branch: main
 - Folder: /root
-
-
-## v4 update
-
-The demo section now uses a concrete math example with a useful prefix and a misleading prefix. CSS/JS links include query-string versioning to reduce browser caching issues on GitHub Pages.
