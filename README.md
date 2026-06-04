@@ -7,6 +7,7 @@ This is a static project page for **PUM: Gain-Based Prefix Evaluation for LLM Re
 - `index.html`: the main project page
 - `style.css`: all page styling
 - `script.js`: the interactive gain demo and BibTeX copy button
+- `.nojekyll`: disables Jekyll processing on GitHub Pages
 
 ## Local preview
 
@@ -20,12 +21,10 @@ Then visit `http://localhost:8000`.
 
 ## Deploy to GitHub Pages
 
-1. Create a new GitHub repository.
-2. Upload these files to the repository root.
-3. Go to **Settings → Pages**.
-4. Set source to **Deploy from a branch** and select the main branch root.
-5. Replace the placeholder resource links in `index.html` with your paper, code, dataset, and model URLs.
+Upload these files to the repository root and keep Pages set to:
 
-## Customize
+- Source: Deploy from a branch
+- Branch: main
+- Folder: /root
 
-Search for `Coming soon` in `index.html` and replace the placeholder links and text.
+Replace the placeholder resource links in `index.html` with your paper, code, dataset, and model URLs.

@@ -20,6 +20,7 @@
       <a href="#idea">Idea</a>
       <a href="#method">Method</a>
       <a href="#results">Results</a>
+      <a href="#demo">Demo</a>
       <a href="#resources">Resources</a>
     </nav>
   </header>
@@ -34,13 +35,13 @@
           <strong>does this prefix make the problem easier to solve?</strong>
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="#resources">Get resources</a>
+          <a class="button primary" href="#results">See results</a>
           <a class="button secondary" href="#demo">Try the demo</a>
         </div>
         <div class="hero-stats" aria-label="Project highlights">
           <div><strong>20K</strong><span>reasoning trajectories</span></div>
           <div><strong>280K</strong><span>utility preferences</span></div>
-          <div><strong>3</strong><span>selection, search, RL uses</span></div>
+          <div><strong>18.5×</strong><span>lower labeling compute vs Math-Shepherd</span></div>
         </div>
       </div>
 
@@ -48,25 +49,60 @@
         <div class="diagram-title">Correctness is not always usefulness</div>
         <div class="comparison">
           <div class="mini-panel prm-panel">
-            <span class="tag">PRM</span>
+            <div class="panel-head"><span class="tag">PRM</span><span class="panel-caption">local validity</span></div>
             <div class="steps">
               <span class="step good">Step 1</span>
               <span class="step good">Step 2</span>
               <span class="step bad">Step 3</span>
               <span class="step good">Step 4</span>
             </div>
-            <p>Scores local step correctness.</p>
+            <p>Scores whether each intermediate step appears correct.</p>
           </div>
           <div class="mini-panel pum-panel">
-            <span class="tag">PUM</span>
-            <div class="gain-bars">
-              <div><span>without prefix</span><i style="--h: 36%"></i></div>
-              <div><span>with prefix</span><i style="--h: 72%"></i></div>
+            <div class="panel-head"><span class="tag">PUM</span><span class="panel-caption">future utility</span></div>
+            <div class="rollout-mini">
+              <div class="rollout-mini-card">
+                <span>without prefix</span>
+                <div class="tiny-dots" aria-label="without prefix continuations">
+                  <i class="correct"></i><i class="correct"></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <strong>2/8</strong>
+              </div>
+              <div class="rollout-mini-card gain">
+                <span>with prefix</span>
+                <div class="tiny-dots" aria-label="with prefix continuations">
+                  <i class="correct"></i><i class="correct"></i><i class="correct"></i><i class="correct"></i><i class="correct"></i><i></i><i></i><i></i>
+                </div>
+                <strong>5/8</strong>
+              </div>
             </div>
-            <p>Scores solve-rate improvement.</p>
+            <p>Scores solve-rate improvement after conditioning on the prefix.</p>
           </div>
         </div>
         <div class="formula">Gain(x, p) = q(x, p) − q(x, ∅)</div>
+      </div>
+    </section>
+
+    <section class="section quick-results" aria-label="Headline experimental results">
+      <div class="quick-card">
+        <span>Beam search</span>
+        <strong>78.00%</strong>
+        <p>MATH500, Qwen2.5-3B, N=100</p>
+      </div>
+      <div class="quick-card">
+        <span>RL average</span>
+        <strong>58.09%</strong>
+        <p>PUM+GRPO vs 55.21% vanilla GRPO</p>
+      </div>
+      <div class="quick-card">
+        <span>Process-only RL</span>
+        <strong>57.21%</strong>
+        <p>stable without final-answer reward</p>
+      </div>
+      <div class="quick-card">
+        <span>Supervision cost</span>
+        <strong>1.0×</strong>
+        <p>vs Math-Shepherd 18.5× compute</p>
       </div>
     </section>
 
@@ -105,7 +141,7 @@
           <h3>Measure gain</h3>
           <p>
             Lightweight students solve each problem with and without the prefix. The solve-rate
-            difference forms a gain profile.
+            difference forms a gain profile across capability levels.
           </p>
         </article>
         <article class="method-card">
@@ -137,17 +173,22 @@
       </div>
     </section>
 
-    <section id="results" class="section">
+    <section id="results" class="section results-section">
       <div class="section-heading">
         <p class="eyebrow">Results</p>
         <h2>One utility signal for selection, search, and RL.</h2>
+        <p>
+          PUM can score complete responses as terminal prefixes, guide partial branches during search,
+          and provide dense prefix-level credit assignment during RL.
+        </p>
       </div>
+
       <div class="results-grid">
         <article class="result-card">
           <h3>Best-of-N selection</h3>
           <p>
-            PUM ranks complete responses as terminal prefixes and achieves best or near-best
-            selection accuracy, especially when candidate pools become large.
+            PUM achieves best or near-best selection accuracy across policy models and datasets,
+            with the clearest advantage at larger candidate pools.
           </p>
           <span class="pill">better trajectory ranking</span>
         </article>
@@ -155,17 +196,61 @@
           <h3>Beam search</h3>
           <p>
             PUM consistently improves prefix-level pruning across datasets, policy models, and search
-            budgets, reaching <strong>78.00%</strong> on MATH500 with Qwen2.5-3B at N=100.
+            budgets, preserving useful partial reasoning branches before final answers are produced.
           </p>
           <span class="pill">better partial-branch guidance</span>
         </article>
         <article class="result-card">
           <h3>Reinforcement learning</h3>
           <p>
-            PUM provides dense prefix-level credit assignment and improves outcome-anchored GRPO
-            from <strong>55.21%</strong> to <strong>58.09%</strong> average accuracy.
+            PUM provides dense prefix-level credit assignment and remains stable in process-only RL,
+            where PRM and PQM are more vulnerable to reward hacking.
           </p>
           <span class="pill">more stable process rewards</span>
+        </article>
+      </div>
+
+      <div class="experiment-block">
+        <div class="experiment-heading">
+          <p class="eyebrow">Beam search at N = 100</p>
+          <h3>PUM gives stronger search-time pruning.</h3>
+        </div>
+        <div class="bar-table" aria-label="Beam search comparison at N=100">
+          <div class="bar-row header"><span>Setting</span><span>PRM</span><span>PQM</span><span>CRM</span><span>PUM</span></div>
+          <div class="bar-row"><span>Qwen2.5-3B / MATH500</span><i style="--v:69.2">69.20</i><i style="--v:66">66.00</i><i style="--v:74.6">74.60</i><i class="best" style="--v:78">78.00</i></div>
+          <div class="bar-row"><span>Qwen2.5-3B / GAOKAO2023</span><i style="--v:42.34">42.34</i><i style="--v:65.45">65.45</i><i style="--v:66.88">66.88</i><i class="best" style="--v:71.43">71.43</i></div>
+          <div class="bar-row"><span>Llama3.1-8B / MATH500</span><i style="--v:23">23.00</i><i style="--v:53">53.00</i><i style="--v:65.6">65.60</i><i class="best" style="--v:73.6">73.60</i></div>
+          <div class="bar-row"><span>Llama3.1-8B / GAOKAO2023</span><i style="--v:27.01">27.01</i><i style="--v:43.9">43.90</i><i style="--v:53.25">53.25</i><i class="best" style="--v:63.9">63.90</i></div>
+        </div>
+      </div>
+
+      <div class="experiment-grid">
+        <article class="experiment-card">
+          <p class="eyebrow">Outcome-anchored RL</p>
+          <h3>PUM+GRPO improves the average.</h3>
+          <div class="score-list">
+            <div><span>Vanilla GRPO</span><strong>55.21</strong></div>
+            <div><span>PRM+GRPO</span><strong>53.55</strong></div>
+            <div><span>PQM+GRPO</span><strong>49.22</strong></div>
+            <div class="winner"><span>PUM+GRPO</span><strong>58.09</strong></div>
+          </div>
+        </article>
+        <article class="experiment-card">
+          <p class="eyebrow">Process-only RL</p>
+          <h3>PUM remains stable without rule reward.</h3>
+          <div class="score-list">
+            <div><span>PRM</span><strong>47.89</strong></div>
+            <div><span>PQM</span><strong>48.78</strong></div>
+            <div class="winner"><span>PUM</span><strong>57.21</strong></div>
+          </div>
+        </article>
+        <article class="experiment-card">
+          <p class="eyebrow">Supervision cost</p>
+          <h3>Less labeling compute than step supervision.</h3>
+          <div class="cost-compare">
+            <div><span>PUM-Math</span><strong>6.72M calls</strong><em>1.0×</em></div>
+            <div><span>Math-Shepherd</span><strong>35.6M calls</strong><em>18.5×</em></div>
+          </div>
         </article>
       </div>
     </section>
