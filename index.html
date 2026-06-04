@@ -1,13 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUM: Gain-Based Prefix Evaluation for LLM Reasoning</title>
-  <meta name="description" content="PUM evaluates reasoning prefixes by their gain: how much a prefix improves the probability of successful completion." />
-  <meta property="og:title" content="PUM: Gain-Based Prefix Evaluation for LLM Reasoning" />
-  <meta property="og:description" content="From correctness to utility: evaluate whether a reasoning prefix actually improves future problem solving." />
-  <meta property="og:type" content="website" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PUM | Gain-Based Prefix Evaluation</title>
+  <meta name="description" content="PUM evaluates reasoning prefixes by measuring their solve-rate gain, not only local correctness." />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -28,295 +25,173 @@
   <main id="top">
     <section class="hero section-grid">
       <div class="hero-copy">
-        <p class="eyebrow">Gain-Based Prefix Evaluation for LLM Reasoning</p>
+        <p class="eyebrow">Gain-based prefix evaluation for LLM reasoning</p>
         <h1>From correctness to utility.</h1>
         <p class="lead">
           PUM evaluates a reasoning prefix by asking a future-facing question:
           <strong>does this prefix make the problem easier to solve?</strong>
         </p>
         <div class="hero-actions">
-          <a class="button primary" href="#results">See results</a>
-          <a class="button secondary" href="#demo">Try the demo</a>
+          <a class="button button-primary" href="#results">See results</a>
+          <a class="button" href="#demo">Try the demo</a>
         </div>
-        <div class="hero-stats" aria-label="Project highlights">
+        <div class="metric-strip" aria-label="Project highlights">
           <div><strong>20K</strong><span>reasoning trajectories</span></div>
           <div><strong>280K</strong><span>utility preferences</span></div>
-          <div><strong>18.5×</strong><span>lower labeling compute vs Math-Shepherd</span></div>
+          <div><strong>3</strong><span>uses: selection, search, RL</span></div>
         </div>
       </div>
-
-      <div class="hero-card" aria-label="Correctness versus utility diagram">
-        <div class="diagram-title">Correctness is not always usefulness</div>
-        <div class="comparison">
-          <div class="mini-panel prm-panel">
-            <div class="panel-head"><span class="tag">PRM</span><span class="panel-caption">local validity</span></div>
-            <div class="steps">
-              <span class="step good">Step 1</span>
-              <span class="step good">Step 2</span>
-              <span class="step bad">Step 3</span>
-              <span class="step good">Step 4</span>
-            </div>
-            <p>Scores whether each intermediate step appears correct.</p>
-          </div>
-          <div class="mini-panel pum-panel">
-            <div class="panel-head"><span class="tag">PUM</span><span class="panel-caption">future utility</span></div>
-            <div class="rollout-mini">
-              <div class="rollout-mini-card">
-                <span>without prefix</span>
-                <div class="tiny-dots" aria-label="without prefix continuations">
-                  <i class="correct"></i><i class="correct"></i><i></i><i></i><i></i><i></i><i></i><i></i>
-                </div>
-                <strong>2/8</strong>
-              </div>
-              <div class="rollout-mini-card gain">
-                <span>with prefix</span>
-                <div class="tiny-dots" aria-label="with prefix continuations">
-                  <i class="correct"></i><i class="correct"></i><i class="correct"></i><i class="correct"></i><i class="correct"></i><i></i><i></i><i></i>
-                </div>
-                <strong>5/8</strong>
-              </div>
-            </div>
-            <p>Scores solve-rate improvement after conditioning on the prefix.</p>
-          </div>
-        </div>
-        <div class="formula">Gain(x, p) = q(x, p) − q(x, ∅)</div>
-      </div>
+      <figure class="paper-figure hero-figure">
+        <img src="assets/figure1_correctness_vs_utility.png" alt="Paper Figure 1 comparing PRM correctness scoring and PUM utility-based evaluation." />
+      </figure>
     </section>
 
-    <section class="section quick-results" aria-label="Headline experimental results">
-      <div class="quick-card">
-        <span>Beam search</span>
-        <strong>78.00%</strong>
-        <p>MATH500, Qwen2.5-3B, N=100</p>
+    <section id="idea" class="section section-grid compact-grid">
+      <div>
+        <p class="eyebrow">Core idea</p>
+        <h2>Correctness is not always usefulness.</h2>
+        <p>
+          A locally correct step can still leave the remaining reasoning brittle. A non-final prefix can be
+          useful if it exposes a productive decomposition that increases downstream solve probability.
+        </p>
       </div>
-      <div class="quick-card">
-        <span>RL average</span>
-        <strong>58.09%</strong>
-        <p>PUM+GRPO vs 55.21% vanilla GRPO</p>
-      </div>
-      <div class="quick-card">
-        <span>Process-only RL</span>
-        <strong>57.21%</strong>
-        <p>stable without final-answer reward</p>
-      </div>
-      <div class="quick-card">
-        <span>Supervision cost</span>
-        <strong>1.0×</strong>
-        <p>vs Math-Shepherd 18.5× compute</p>
-      </div>
-    </section>
-
-    <section id="idea" class="section narrow">
-      <p class="eyebrow">Core idea</p>
-      <h2>A prefix is useful if it changes the future.</h2>
-      <p>
-        Existing process reward models often judge whether each intermediate step is locally valid.
-        PUM instead estimates the marginal contribution of a prefix: the improvement in downstream
-        solve probability after conditioning student models on that prefix.
-      </p>
-      <div class="quote-card">
-        <span>Instead of asking</span>
-        <strong>“Is this step correct?”</strong>
-        <span>PUM asks</span>
-        <strong>“Does this prefix increase the chance of success?”</strong>
+      <div class="formula-card">
+        <span class="formula-label">Prefix gain</span>
+        <div class="formula">Gain(x, p) = q(x, p) - q(x, ∅)</div>
+        <p>
+          Compare success after conditioning on prefix <em>p</em> against solving the same problem from scratch.
+        </p>
       </div>
     </section>
 
     <section id="method" class="section">
       <div class="section-heading">
         <p class="eyebrow">Method</p>
-        <h2>Estimate gain, construct preferences, train a utility model.</h2>
-      </div>
-      <div class="method-flow">
-        <article class="method-card">
-          <span class="number">01</span>
-          <h3>Sample prefixes</h3>
-          <p>
-            Collect vertical prefixes from the same trajectory and horizontal prefixes from different
-            trajectories with similar lengths.
-          </p>
-        </article>
-        <article class="method-card">
-          <span class="number">02</span>
-          <h3>Measure gain</h3>
-          <p>
-            Lightweight students solve each problem with and without the prefix. The solve-rate
-            difference forms a gain profile across capability levels.
-          </p>
-        </article>
-        <article class="method-card">
-          <span class="number">03</span>
-          <h3>Train PUM</h3>
-          <p>
-            Gains are normalized and converted into within-problem pairwise preferences. PUM learns
-            a scalar utility score with pairwise ranking.
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <section class="section dataset-section">
-      <div>
-        <p class="eyebrow">PUM-Math</p>
-        <h2>Outcome-grounded supervision without manual step labels.</h2>
+        <h2>Sample prefixes, estimate gain, learn utility.</h2>
         <p>
-          PUM-Math replaces human step-level correctness labels with gain-based pairwise utility
-          preferences derived from student rollouts. The result is a scalable prefix-supervision
-          dataset for mathematical reasoning.
+          PUM converts outcome-grounded solve-rate gains into pairwise prefix preferences, then trains a scalar
+          utility model to score partial and complete reasoning trajectories.
         </p>
       </div>
-      <div class="metric-grid">
-        <div class="metric"><strong>20K</strong><span>trajectories</span></div>
-        <div class="metric"><strong>280K</strong><span>pairwise utilities</span></div>
-        <div class="metric"><strong>7</strong><span>trajectory generators</span></div>
-        <div class="metric"><strong>6</strong><span>student models</span></div>
+      <figure class="paper-figure wide-figure">
+        <img src="assets/figure2_method_pipeline.png" alt="Paper Figure 2 showing prefix sampling, gain-based preference construction, and PUM training." />
+      </figure>
+      <div class="cards three-cards">
+        <article>
+          <span class="card-index">01</span>
+          <h3>Prefix sampling</h3>
+          <p>Construct vertical and horizontal comparisons from diverse reasoning trajectories.</p>
+        </article>
+        <article>
+          <span class="card-index">02</span>
+          <h3>Gain estimation</h3>
+          <p>Lightweight students solve with and without a prefix; their solve-rate differences form a gain profile.</p>
+        </article>
+        <article>
+          <span class="card-index">03</span>
+          <h3>Pairwise training</h3>
+          <p>Gain differences become preference labels for training an LLM backbone with a scalar value head.</p>
+        </article>
       </div>
     </section>
 
     <section id="results" class="section results-section">
       <div class="section-heading">
         <p class="eyebrow">Results</p>
-        <h2>One utility signal for selection, search, and RL.</h2>
+        <h2>One signal for selection, search, and RL.</h2>
         <p>
-          PUM can score complete responses as terminal prefixes, guide partial branches during search,
-          and provide dense prefix-level credit assignment during RL.
+          The webpage below uses the original figures and tables from the PDF so visitors can inspect the evidence directly.
         </p>
       </div>
 
-      <div class="results-grid">
-        <article class="result-card">
-          <h3>Best-of-N selection</h3>
-          <p>
-            PUM achieves best or near-best selection accuracy across policy models and datasets,
-            with the clearest advantage at larger candidate pools.
-          </p>
-          <span class="pill">better trajectory ranking</span>
+      <div class="result-highlights">
+        <article>
+          <span>Best-of-N</span>
+          <strong>best / near-best</strong>
+          <p>Consistent gains across policy models and datasets, especially when candidate pools grow.</p>
         </article>
-        <article class="result-card featured">
-          <h3>Beam search</h3>
-          <p>
-            PUM consistently improves prefix-level pruning across datasets, policy models, and search
-            budgets, preserving useful partial reasoning branches before final answers are produced.
-          </p>
-          <span class="pill">better partial-branch guidance</span>
+        <article>
+          <span>Beam Search</span>
+          <strong>78.00%</strong>
+          <p>MATH500 with Qwen2.5-3B at N=100; GAOKAO2023 reaches 71.43% in the same setting.</p>
         </article>
-        <article class="result-card">
-          <h3>Reinforcement learning</h3>
-          <p>
-            PUM provides dense prefix-level credit assignment and remains stable in process-only RL,
-            where PRM and PQM are more vulnerable to reward hacking.
-          </p>
-          <span class="pill">more stable process rewards</span>
+        <article>
+          <span>RL</span>
+          <strong>55.21 → 58.09</strong>
+          <p>PUM+GRPO improves average accuracy over vanilla GRPO in the outcome-anchored setup.</p>
+        </article>
+        <article>
+          <span>Labeling cost</span>
+          <strong>1.0× vs 18.5×</strong>
+          <p>PUM-Math uses lightweight students and avoids human step-level annotations.</p>
         </article>
       </div>
 
-      <div class="experiment-block">
-        <div class="experiment-heading">
-          <p class="eyebrow">Beam search at N = 100</p>
-          <h3>PUM gives stronger search-time pruning.</h3>
+      <div class="figure-stack">
+        <figure class="paper-figure">
+          <img src="assets/figure3_bon_ranking.png" alt="Paper Figure 3 with Best-of-N selection and ranking robustness results." />
+        </figure>
+        <figure class="paper-figure">
+          <img src="assets/table1_beam_search.png" alt="Paper Table 1 with Beam Search accuracy on MATH500 and GAOKAO2023." />
+        </figure>
+        <div class="split-figures">
+          <figure class="paper-figure">
+            <img src="assets/table2_rl_results.png" alt="Paper Table 2 with RL pass@1 accuracy after training." />
+          </figure>
+          <figure class="paper-figure small-figure">
+            <img src="assets/figure4_rl_curves.png" alt="Paper Figure 4 with RL training curves." />
+          </figure>
         </div>
-        <div class="bar-table" aria-label="Beam search comparison at N=100">
-          <div class="bar-row header"><span>Setting</span><span>PRM</span><span>PQM</span><span>CRM</span><span>PUM</span></div>
-          <div class="bar-row"><span>Qwen2.5-3B / MATH500</span><i style="--v:69.2">69.20</i><i style="--v:66">66.00</i><i style="--v:74.6">74.60</i><i class="best" style="--v:78">78.00</i></div>
-          <div class="bar-row"><span>Qwen2.5-3B / GAOKAO2023</span><i style="--v:42.34">42.34</i><i style="--v:65.45">65.45</i><i style="--v:66.88">66.88</i><i class="best" style="--v:71.43">71.43</i></div>
-          <div class="bar-row"><span>Llama3.1-8B / MATH500</span><i style="--v:23">23.00</i><i style="--v:53">53.00</i><i style="--v:65.6">65.60</i><i class="best" style="--v:73.6">73.60</i></div>
-          <div class="bar-row"><span>Llama3.1-8B / GAOKAO2023</span><i style="--v:27.01">27.01</i><i style="--v:43.9">43.90</i><i style="--v:53.25">53.25</i><i class="best" style="--v:63.9">63.90</i></div>
-        </div>
-      </div>
-
-      <div class="experiment-grid">
-        <article class="experiment-card">
-          <p class="eyebrow">Outcome-anchored RL</p>
-          <h3>PUM+GRPO improves the average.</h3>
-          <div class="score-list">
-            <div><span>Vanilla GRPO</span><strong>55.21</strong></div>
-            <div><span>PRM+GRPO</span><strong>53.55</strong></div>
-            <div><span>PQM+GRPO</span><strong>49.22</strong></div>
-            <div class="winner"><span>PUM+GRPO</span><strong>58.09</strong></div>
-          </div>
-        </article>
-        <article class="experiment-card">
-          <p class="eyebrow">Process-only RL</p>
-          <h3>PUM remains stable without rule reward.</h3>
-          <div class="score-list">
-            <div><span>PRM</span><strong>47.89</strong></div>
-            <div><span>PQM</span><strong>48.78</strong></div>
-            <div class="winner"><span>PUM</span><strong>57.21</strong></div>
-          </div>
-        </article>
-        <article class="experiment-card">
-          <p class="eyebrow">Supervision cost</p>
-          <h3>Less labeling compute than step supervision.</h3>
-          <div class="cost-compare">
-            <div><span>PUM-Math</span><strong>6.72M calls</strong><em>1.0×</em></div>
-            <div><span>Math-Shepherd</span><strong>35.6M calls</strong><em>18.5×</em></div>
-          </div>
-        </article>
+        <figure class="paper-figure">
+          <img src="assets/figure5_further_analysis.png" alt="Paper Figure 5 with further analyses on weak-to-strong transfer, policy dependence, scaling, and hard-data RL." />
+        </figure>
+        <figure class="paper-figure">
+          <img src="assets/table3_cost_comparison.png" alt="Paper Table 3 with supervision construction cost comparison." />
+        </figure>
       </div>
     </section>
 
     <section id="demo" class="section demo-section">
-      <div class="demo-copy">
-        <p class="eyebrow">Interactive intuition</p>
-        <h2>See how gain changes the preferred prefix.</h2>
+      <div class="section-heading">
+        <p class="eyebrow">Interactive example</p>
+        <h2>A real math case: which prefix is more useful?</h2>
         <p>
-          Click a prefix below. The demo compares the no-prefix solve rate with the prefix-conditioned
-          solve rate and computes the resulting utility gain.
+          This example illustrates why evaluating the future effect of a prefix can be different from simply checking surface plausibility.
         </p>
       </div>
+
       <div class="demo-card">
         <div class="problem-box">
-          <span>Problem</span>
-          <p>A math problem requires a multi-step derivation. Which prefix should an evaluator prefer?</p>
+          <span class="box-label">Problem</span>
+          <p>
+            Let <em>x</em> and <em>y</em> be real numbers such that <em>x + y = 10</em> and <em>xy = 21</em>.
+            Find <em>x² + y²</em>.
+          </p>
         </div>
-        <div class="prefix-options" role="tablist" aria-label="Prefix options">
-          <button class="prefix active" data-prefix="A">
-            <strong>Prefix A</strong>
-            <span>Identifies a useful decomposition.</span>
+        <div class="prefix-grid">
+          <button class="prefix-card active" data-prefix="a" type="button">
+            <span class="box-label">Prefix A</span>
+            <strong>Use the key identity.</strong>
+            <p>
+              Since (x + y)² = x² + 2xy + y², we can compute x² + y² from the two given quantities.
+            </p>
           </button>
-          <button class="prefix" data-prefix="B">
-            <strong>Prefix B</strong>
-            <span>Looks locally plausible but heads toward a dead end.</span>
+          <button class="prefix-card" data-prefix="b" type="button">
+            <span class="box-label">Prefix B</span>
+            <strong>Make a tempting but wrong guess.</strong>
+            <p>
+              Since x + y = 10, try x = 6 and y = 4. Then x² + y² = 36 + 16 = 52.
+            </p>
           </button>
         </div>
-        <div class="rollout-view">
-          <div class="rollout-row">
-            <span>Without prefix</span>
-            <div class="dots" id="withoutDots" aria-label="without prefix continuations"></div>
-            <strong id="withoutRate">2/8</strong>
-          </div>
-          <div class="rollout-row">
-            <span id="withLabel">With Prefix A</span>
-            <div class="dots" id="withDots" aria-label="with prefix continuations"></div>
-            <strong id="withRate">5/8</strong>
-          </div>
-        </div>
-        <div class="gain-output">
-          <span>Estimated gain</span>
-          <strong id="gainValue">+3/8</strong>
-        </div>
-      </div>
-    </section>
-
-    <section class="section series-section">
-      <div>
-        <p class="eyebrow">Evaluation by intervention</p>
-        <h2>PUM naturally connects with Teach2Eval.</h2>
-        <p>
-          Both works evaluate an object by its effect after intervention. Teach2Eval evaluates a model
-          through student improvement after teaching; PUM evaluates a reasoning prefix through student
-          solve-rate improvement after conditioning on the prefix.
-        </p>
-      </div>
-      <div class="series-table" role="table" aria-label="Teach2Eval and PUM comparison">
-        <div class="series-row header" role="row">
-          <span>Work</span><span>Evaluated object</span><span>Intervention</span><span>Outcome</span>
-        </div>
-        <div class="series-row" role="row">
-          <span>Teach2Eval</span><span>LLM teaching ability</span><span>Let the model teach students</span><span>Student improvement</span>
-        </div>
-        <div class="series-row" role="row">
-          <span>PUM</span><span>Reasoning prefix utility</span><span>Give prefix to students</span><span>Solve-rate gain</span>
+        <div class="demo-output" id="demo-output" aria-live="polite">
+          <span class="box-label">PUM-style utility judgment</span>
+          <h3>Prefer Prefix A</h3>
+          <p>
+            Prefix A reduces the remaining task to a direct calculation:
+            x² + y² = (x + y)² - 2xy = 100 - 42 = 58.
+            Prefix B looks simple but violates xy = 21 because 6 × 4 = 24, so it pushes the continuation toward a wrong answer.
+          </p>
         </div>
       </div>
     </section>
@@ -325,38 +200,31 @@
       <div class="section-heading">
         <p class="eyebrow">Resources</p>
         <h2>Paper, code, data, and model.</h2>
+        <p>Replace the placeholder links below when the public release is ready.</p>
       </div>
       <div class="resource-grid">
-        <a class="resource-card" href="#" aria-label="Paper link placeholder">
-          <strong>Paper</strong><span>Coming soon</span>
-        </a>
-        <a class="resource-card" href="#" aria-label="Code link placeholder">
-          <strong>Code</strong><span>Coming soon</span>
-        </a>
-        <a class="resource-card" href="#" aria-label="Dataset link placeholder">
-          <strong>PUM-Math</strong><span>Coming soon</span>
-        </a>
-        <a class="resource-card" href="#" aria-label="Model link placeholder">
-          <strong>PUM Model</strong><span>Coming soon</span>
-        </a>
+        <a href="#" aria-label="Paper link placeholder"><strong>Paper</strong><span>Coming soon</span></a>
+        <a href="#" aria-label="Code link placeholder"><strong>Code</strong><span>Coming soon</span></a>
+        <a href="#" aria-label="Dataset link placeholder"><strong>PUM-Math</strong><span>Coming soon</span></a>
+        <a href="#" aria-label="Model link placeholder"><strong>PUM Model</strong><span>Coming soon</span></a>
       </div>
-      <div class="bibtex">
-        <div class="bibtex-header">
-          <strong>BibTeX</strong>
-          <button id="copyBibtex" type="button">Copy</button>
+      <div class="bibtex-card">
+        <div class="bibtex-topline">
+          <span class="box-label">BibTeX</span>
+          <button id="copy-bibtex" class="mini-button" type="button">Copy</button>
         </div>
-        <pre><code id="bibtexText">@inproceedings{anonymous2026pum,
-  title={From Correctness to Utility: Gain-Based Prefix Evaluation for LLM Reasoning},
-  author={Anonymous},
-  booktitle={ACL},
-  year={2026}
-}</code></pre>
+        <pre id="bibtex">@inproceedings{pum2026,
+  title = {From Correctness to Utility: Gain-Based Prefix Evaluation for LLM Reasoning},
+  author = {Anonymous},
+  booktitle = {ACL Submission},
+  year = {2026}
+}</pre>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <p>© 2026 PUM Project. Built as a static project page.</p>
+    <span>PUM: Gain-Based Prefix Evaluation for LLM Reasoning</span>
     <a href="#top">Back to top ↑</a>
   </footer>
 

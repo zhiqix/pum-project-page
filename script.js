@@ -1,60 +1,42 @@
-const demoData = {
-  A: {
-    label: "With Prefix A",
-    withoutCorrect: 2,
-    withCorrect: 5,
-    gain: "+3/8"
+const prefixCards = document.querySelectorAll('.prefix-card');
+const output = document.getElementById('demo-output');
+
+const judgments = {
+  a: {
+    title: 'Prefer Prefix A',
+    text: 'Prefix A reduces the remaining task to a direct calculation: x² + y² = (x + y)² - 2xy = 100 - 42 = 58. It gives the continuation a high-utility path to the answer.'
   },
-  B: {
-    label: "With Prefix B",
-    withoutCorrect: 2,
-    withCorrect: 1,
-    gain: "-1/8"
+  b: {
+    title: 'Do not prefer Prefix B',
+    text: 'Prefix B starts from a tempting guess, but x = 6 and y = 4 violates xy = 21 because 6 × 4 = 24. It is likely to make future continuations confidently wrong.'
   }
 };
 
-function renderDots(container, correct, total = 8) {
-  container.innerHTML = "";
-  for (let i = 0; i < total; i += 1) {
-    const dot = document.createElement("span");
-    dot.className = i < correct ? "dot correct" : "dot";
-    container.appendChild(dot);
-  }
-}
-
-function updateDemo(prefixKey) {
-  const data = demoData[prefixKey];
-  document.querySelectorAll(".prefix").forEach((button) => {
-    button.classList.toggle("active", button.dataset.prefix === prefixKey);
+prefixCards.forEach((card) => {
+  card.addEventListener('click', () => {
+    prefixCards.forEach((item) => item.classList.remove('active'));
+    card.classList.add('active');
+    const key = card.dataset.prefix;
+    const judgment = judgments[key];
+    output.innerHTML = `
+      <span class="box-label">PUM-style utility judgment</span>
+      <h3>${judgment.title}</h3>
+      <p>${judgment.text}</p>
+    `;
   });
-
-  document.getElementById("withLabel").textContent = data.label;
-  document.getElementById("withoutRate").textContent = `${data.withoutCorrect}/8`;
-  document.getElementById("withRate").textContent = `${data.withCorrect}/8`;
-  document.getElementById("gainValue").textContent = data.gain;
-
-  renderDots(document.getElementById("withoutDots"), data.withoutCorrect);
-  renderDots(document.getElementById("withDots"), data.withCorrect);
-}
-
-document.querySelectorAll(".prefix").forEach((button) => {
-  button.addEventListener("click", () => updateDemo(button.dataset.prefix));
 });
 
-const copyButton = document.getElementById("copyBibtex");
+const copyButton = document.getElementById('copy-bibtex');
 if (copyButton) {
-  copyButton.addEventListener("click", async () => {
-    const text = document.getElementById("bibtexText").textContent;
+  copyButton.addEventListener('click', async () => {
+    const bibtex = document.getElementById('bibtex').innerText;
     try {
-      await navigator.clipboard.writeText(text);
-      copyButton.textContent = "Copied";
-      window.setTimeout(() => {
-        copyButton.textContent = "Copy";
-      }, 1300);
+      await navigator.clipboard.writeText(bibtex);
+      copyButton.textContent = 'Copied';
+      setTimeout(() => { copyButton.textContent = 'Copy'; }, 1200);
     } catch (error) {
-      copyButton.textContent = "Select text";
+      copyButton.textContent = 'Select manually';
+      setTimeout(() => { copyButton.textContent = 'Copy'; }, 1600);
     }
   });
 }
-
-updateDemo("A");
