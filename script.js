@@ -4,11 +4,11 @@ const output = document.getElementById('demo-output');
 const judgments = {
   a: {
     title: 'Prefer Prefix A',
-    text: 'Prefix A reduces the remaining task to a direct calculation: x² + y² = (x + y)² - 2xy = 100 - 42 = 58. It gives the continuation a high-utility path to the answer.'
+    text: 'Prefix A gives a reusable path to the answer: x² + y² = (x + y)² − 2xy = 10² − 2 × 21 = 58. It should increase the probability that a continuation reaches the correct answer.'
   },
   b: {
-    title: 'Do not prefer Prefix B',
-    text: 'Prefix B starts from a tempting guess, but x = 6 and y = 4 violates xy = 21 because 6 × 4 = 24. It is likely to make future continuations confidently wrong.'
+    title: 'Reject Prefix B',
+    text: 'Prefix B is fluent but invalid: x = 6 and y = 4 satisfies x + y = 10, but violates xy = 21 because 6 × 4 = 24. A solver following this prefix is likely to finish with the wrong answer 52.'
   }
 };
 
@@ -16,8 +16,7 @@ prefixCards.forEach((card) => {
   card.addEventListener('click', () => {
     prefixCards.forEach((item) => item.classList.remove('active'));
     card.classList.add('active');
-    const key = card.dataset.prefix;
-    const judgment = judgments[key];
+    const judgment = judgments[card.dataset.prefix];
     output.innerHTML = `
       <span class="box-label">PUM-style utility judgment</span>
       <h3>${judgment.title}</h3>
